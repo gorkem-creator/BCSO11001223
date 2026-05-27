@@ -6,9 +6,13 @@ GatewayIntentBits,
 EmbedBuilder,
 ActionRowBuilder,
 ButtonBuilder,
-ButtonStyle,
-SlashCommandBuilder
+ButtonStyle
 } = require('discord.js');
+
+const {
+joinVoiceChannel,
+getVoiceConnection
+} = require('@discordjs/voice');
 
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
@@ -16,7 +20,8 @@ const db = new QuickDB();
 const client = new Client({
 intents: [
 GatewayIntentBits.Guilds,
-GatewayIntentBits.GuildMembers
+GatewayIntentBits.GuildMembers,
+GatewayIntentBits.GuildVoiceStates
 ]
 });
 
@@ -48,6 +53,7 @@ const embed = new EmbedBuilder()
 "Mesai giriş/çıkış sistemi aktif.\n\n" +
 "⚠️ Mesaide değilken botu açık bırakmanız strike sebebidir."
 )
+.setImage("https://media.discordapp.net/attachments/1498313566015717446/1498797722365460683/image.png?ex=6a180a67&is=6a16b8e7&hm=8253fb6be5195a27bcb080c06ed90d8365dd88fb751efd20866947c6e1ce0127&=&format=webp&quality=lossless&width=1872&height=761")
 .setColor("#2b2d31");
 
 const row = new ActionRowBuilder().addComponents(
@@ -138,6 +144,53 @@ ephemeral:true
 });
 }
 
+/* KATIL */
+
+if(interaction.commandName === "katil") {
+
+const kanal = interaction.member.voice.channel;
+
+if(!kanal) {
+return interaction.reply({
+content:"❌ Önce bir ses kanalına gir.",
+ephemeral:true
+});
+}
+
+joinVoiceChannel({
+channelId: kanal.id,
+guildId: kanal.guild.id,
+adapterCreator: kanal.guild.voiceAdapterCreator,
+selfDeaf: false
+});
+
+return interaction.reply({
+content:`✅ ${kanal.name} kanalına katıldım.`,
+ephemeral:true
+});
+}
+
+/* AYRIL */
+
+if(interaction.commandName === "ayril") {
+
+const connection = getVoiceConnection(interaction.guild.id);
+
+if(!connection) {
+return interaction.reply({
+content:"❌ Bot ses kanalında değil.",
+ephemeral:true
+});
+}
+
+connection.destroy();
+
+return interaction.reply({
+content:"✅ Ses kanalından ayrıldım.",
+ephemeral:true
+});
+}
+
 }
 
 /* ================= BUTTON ================= */
@@ -157,7 +210,11 @@ c => c.name === "⏰・ᴍᴇꜱᴀɪ-ʟᴏɢ"
 if(log) {
 
 await log.send(
-`${interaction.user} Mesaiye Giriş Yaptı (10-41), İyi Mesailer\n🕒 ${saat()}`
+`🚓 **MESAİ BİLDİRİMİ**
+
+👮 Personel: ${interaction.user}
+📟 Durum: MESAİYE BAŞLADI (10-41)
+🕒 Saat: ${saat()}`
 );
 
 }
@@ -196,7 +253,12 @@ c => c.name === "⏰・ᴍᴇꜱᴀɪ-ʟᴏɢ"
 if(log) {
 
 await log.send(
-`${interaction.user} Mesaiden Çıkış Yaptı (10-42), İyi İstirahatler\n🕒 ${saat()}\n⏱ Mesai Süresi: ${dakika} dakika`
+`🚓 **MESAİ BİLDİRİMİ**
+
+👮 Personel: ${interaction.user}
+📟 Durum: MESAİ BİTTİ (10-42)
+🕒 Çıkış Saati: ${saat()}
+⏱ Süre: ${dakika} dakika`
 );
 
 }
