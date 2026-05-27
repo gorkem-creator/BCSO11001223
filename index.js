@@ -6,12 +6,13 @@ const {
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 
-// --- WEB SUNUCUSU (Render Uyumu için) ---
+// --- WEB SUNUCUSU (Render Uyumu İçin) ---
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
-app.get('/', (req, res) => res.send('BCSO Botu aktif ve çalışıyor!'));
+app.get('/', (req, res) => res.send('BCSO Botu Aktif ve Çalışıyor!'));
 app.listen(port, () => console.log(`Web sunucusu ${port} portunda çalışıyor.`));
+// ----------------------------------------
 
 const client = new Client({
     intents: [
@@ -27,12 +28,13 @@ const CADET_ROLE_ID = "1438149589579599958";
 const KANALLAR = {
     MESAI_LOG: "⏰・ᴍᴇꜱᴀɪ-ʟᴏɢ",
     BASVURU_DURUM: "📚・ʙᴀşᴠᴜʀᴜ-ᴅᴜʀᴜᴍ",
-    PANEL_FOTO: "https://media.discordapp.net/attachments/1498313566015717446/1498797722365460683/image.png?ex=6a1415e7&is=6a12c467&hm=b44f1946156353002d8bc2560f0d33a82802c86bf01830f07cf18011f417af2c"
+    PANEL_FOTO: "https://media.discordapp.net/attachments/1498313566015717446/1498797722365460683/image.png"
 };
 
-client.once('ready', () => console.log(`🟢 BCSO Denetim Sistemi Aktif: ${client.user.tag}`));
+client.once('ready', () => console.log(`🟢 BCSO Denetim Sistemi Başarıyla Başladı.`));
 
 client.on('interactionCreate', async interaction => {
+    // MODAL (FORM) İŞLEMLERİ
     if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'basvuru_modal') {
         const ooc = interaction.fields.getTextInputValue('ooc_bilgi');
         const ic = interaction.fields.getTextInputValue('ic_bilgi');
@@ -61,6 +63,7 @@ client.on('interactionCreate', async interaction => {
         return interaction.reply({ content: "✅ Başvurunuz başarıyla iletildi.", ephemeral: true });
     }
 
+    // BUTON İŞLEMLERİ
     if (interaction.isButton()) {
         if (interaction.customId === "basvuru_yap") {
             const modal = new ModalBuilder().setCustomId('basvuru_modal').setTitle('BCSO Başvuru Formu');
@@ -73,49 +76,36 @@ client.on('interactionCreate', async interaction => {
             );
             return interaction.showModal(modal);
         }
+        
         if (interaction.customId.startsWith("onayla_")) {
             const member = await interaction.guild.members.fetch(interaction.customId.split("_")[1]);
             await member.roles.add(CADET_ROLE_ID);
             await interaction.message.edit({ embeds: [EmbedBuilder.from(interaction.message.embeds[0]).setColor("Green").setTitle("✅ ONAYLANDI")], components: [] });
             return interaction.reply({ content: "Rol verildi.", ephemeral: true });
         }
+        
         if (interaction.customId.startsWith("reddet_")) {
             await interaction.message.edit({ embeds: [EmbedBuilder.from(interaction.message.embeds[0]).setColor("Red").setTitle("❌ REDDEDİLDİ")], components: [] });
             return interaction.reply({ content: "Başvuru reddedildi.", ephemeral: true });
         }
-        if (interaction.customId === "mesai_gir") {
-            await db.set(`mesai_${interaction.user.id}`, Date.now());
-            const logK = interaction.guild.channels.cache.find(c => c.name === KANALLAR.MESAI_LOG);
-            if (logK) await logK.send(`🕒 ${interaction.user} mesaiye giriş yaptı.`);
-            return interaction.reply({ content: "✅ Giriş yapıldı.", ephemeral: true });
-        }
-        if (interaction.customId === "mesai_cik") {
-            const start = await db.get(`mesai_${interaction.user.id}`);
-            if (!start) return interaction.reply({ content: "❌ Aktif mesain yok.", ephemeral: true });
-            const dk = Math.floor((Date.now() - start) / 60000);
-            await db.add(`toplam_${interaction.user.id}`, dk);
-            await db.delete(`mesai_${interaction.user.id}`);
-            const logK = interaction.guild.channels.cache.find(c => c.name === KANALLAR.MESAI_LOG);
-            if (logK) await logK.send(`🕒 ${interaction.user} mesaiyi bitirdi. (${dk} dk)`);
-            return interaction.reply({ content: `✅ ${dk} dk mesai eklendi.`, ephemeral: true });
-        }
     }
 
+    // SLASH KOMUTLAR
     if (interaction.isChatInputCommand()) {
         if (interaction.commandName === 'mesai-panel') {
             const embed = new EmbedBuilder().setTitle("🚓 BCSO MESAI").setImage(KANALLAR.PANEL_FOTO).setDescription("Mesaide değilken botu açık bırakmanız Strike 1 ile sonuçlanır.");
-            const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId("mesai_gir").setLabel("GİRİŞ").setStyle(ButtonStyle.Success), new ButtonBuilder().setCustomId("mesai_cik").setLabel("ÇIKIŞ").setStyle(ButtonStyle.Danger));
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId("mesai_gir").setLabel("GİRİŞ (10-41)").setStyle(ButtonStyle.Success),
+                new ButtonBuilder().setCustomId("mesai_cik").setLabel("ÇIKIŞ (10-42)").setStyle(ButtonStyle.Danger)
+            );
             return interaction.reply({ embeds: [embed], components: [row] });
         }
         if (interaction.commandName === 'basvuru-panel') {
-            const embed = new EmbedBuilder().setTitle("👮 BCSO BAŞVURU").setDescription("Blaine County Sheriff Office Bünyesinde Görev Yapabilmek için Formu Eksiksiz Doldurmanız Gerekir.\n⚠️ 5X Strike = İhraç.\nℹ️ Herkes Cadet rütbesinden başlar.");
+            const embed = new EmbedBuilder().setTitle("👮 BCSO BAŞVURU").setDescription("Blaine County Sheriff Office bünyesinde görev yapabilmek için formu doldurun.\n⚠️ 5X Strike = İhraç.\nℹ️ Herkes Deputy Cadet olarak başlar.");
             const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId("basvuru_yap").setLabel("BAŞVURU YAP").setStyle(ButtonStyle.Primary));
             return interaction.reply({ embeds: [embed], components: [row] });
         }
-        if (interaction.commandName === 'mesai-kontrol') {
-            const total = await db.get(`toplam_${interaction.options.getUser('uye').id}`) || 0;
-            return interaction.reply({ content: `${interaction.options.getUser('uye').username} toplam ${total} dk.` });
-        }
     }
 });
+
 client.login(process.env.TOKEN);
