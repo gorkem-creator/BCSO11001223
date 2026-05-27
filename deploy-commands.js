@@ -1,47 +1,80 @@
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
 
+const {
+    REST,
+    Routes,
+    SlashCommandBuilder
+} = require('discord.js');
+
 const commands = [
-    // Mesai Sistemi Komutları
+
     new SlashCommandBuilder()
         .setName('mesai-panel')
-        .setDescription('Mesai giriş/çıkış panelini gönderir.'),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-kontrol')
-        .setDescription('Bir kullanıcının toplam mesai süresini gösterir.')
-        .addUserOption(option => option.setName('uye').setDescription('Mesaisine bakılacak üye').setRequired(true)),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-ekle')
-        .setDescription('Bir kullanıcıya mesai süresi ekler.')
-        .addUserOption(option => option.setName('uye').setDescription('Üye seçin').setRequired(true))
-        .addIntegerOption(option => option.setName('dakika').setDescription('Eklenecek dakika miktarı').setRequired(true)),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-sifirla')
-        .setDescription('Bir kullanıcının mesaisini sıfırlar.')
-        .addUserOption(option => option.setName('uye').setDescription('Sıfırlanacak üye').setRequired(true)),
+        .setDescription('Mesai panelini gönderir'),
 
-    // Başvuru Sistemi Komutu
     new SlashCommandBuilder()
         .setName('basvuru-panel')
-        .setDescription('Başvuru form panelini gönderir.')
-];
+        .setDescription('Başvuru panelini gönderir'),
+
+    new SlashCommandBuilder()
+        .setName('mesai-siralama')
+        .setDescription('Mesai sıralamasını gösterir'),
+
+    new SlashCommandBuilder()
+        .setName('mesai-ekle')
+        .setDescription('Bir kullanıcıya mesai ekler')
+
+        .addUserOption(option =>
+            option
+                .setName('uye')
+                .setDescription('Üye seç')
+                .setRequired(true))
+
+        .addIntegerOption(option =>
+            option
+                .setName('dakika')
+                .setDescription('Dakika miktarı')
+                .setRequired(true)),
+
+    new SlashCommandBuilder()
+        .setName('mesai-sifirla')
+        .setDescription('Bir kullanıcının mesaisini sıfırlar')
+
+        .addUserOption(option =>
+            option
+                .setName('uye')
+                .setDescription('Üye seç')
+                .setRequired(true)),
+
+    new SlashCommandBuilder()
+        .setName('katil')
+        .setDescription('Bulunduğun ses kanalına katılır'),
+
+    new SlashCommandBuilder()
+        .setName('ayril')
+        .setDescription('Ses kanalından ayrılır')
+
+].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 (async () => {
+
     try {
-        console.log('🔄 Slash komutları Discord\'a yükleniyor...');
-        
+
+        console.log('🔄 Komutlar yükleniyor...');
+
         await rest.put(
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands }
         );
 
-        console.log('✅ Başarıyla tamamlandı! Tüm komutlar aktif.');
+        console.log('✅ Komutlar başarıyla yüklendi.');
+
     } catch (error) {
-        console.error('❌ Hata oluştu:', error);
+
+        console.error(error);
+
     }
+
 })();
