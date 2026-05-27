@@ -36,7 +36,15 @@ new SlashCommandBuilder()
 option
 .setName('uye')
 .setDescription('Üye seç')
-.setRequired(true))
+.setRequired(true)),
+
+new SlashCommandBuilder()
+.setName('katil')
+.setDescription('Bulunduğun ses kanalına katılır'),
+
+new SlashCommandBuilder()
+.setName('ayril')
+.setDescription('Ses kanalından ayrılır')
 
 ].map(command => command.toJSON());
 
