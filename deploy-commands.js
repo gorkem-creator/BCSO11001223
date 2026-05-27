@@ -1,42 +1,16 @@
 const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
 
-// Komutlarımızı tanımlıyoruz
 const commands = [
-    new SlashCommandBuilder()
-        .setName('mesai-panel')
-        .setDescription('Mesai sistemini başlatır.'),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-siralama')
-        .setDescription('Mesai sıralamasını gösterir.'),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-ekle')
-        .setDescription('Kullanıcıya mesai ekler.')
-        .addUserOption(option => option.setName('uye').setDescription('Üye').setRequired(true))
-        .addIntegerOption(option => option.setName('dakika').setDescription('Dakika').setRequired(true)),
-    
-    new SlashCommandBuilder()
-        .setName('mesai-sifirla')
-        .setDescription('Kullanıcının mesaisini sıfırlar.')
-        .addUserOption(option => option.setName('uye').setDescription('Üye').setRequired(true))
+    new SlashCommandBuilder().setName('mesai-panel').setDescription('Mesai panelini gönderir.'),
+    new SlashCommandBuilder().setName('basvuru-panel').setDescription('Başvuru panelini gönderir.'),
+    new SlashCommandBuilder().setName('mesai-kontrol').setDescription('Kullanıcı mesaisini gösterir.').addUserOption(o => o.setName('uye').setRequired(true)),
+    new SlashCommandBuilder().setName('mesai-ekle').setDescription('Mesai ekler.').addUserOption(o => o.setName('uye').setRequired(true)).addIntegerOption(o => o.setName('dakika').setRequired(true)),
+    new SlashCommandBuilder().setName('mesai-sifirla').setDescription('Sıfırlar.').addUserOption(o => o.setName('uye').setRequired(true))
 ];
 
-// Discord REST API ayarları
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-
 (async () => {
-    try {
-        console.log('Komutlar Discord\'a yükleniyor...');
-
-        await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID), 
-            { body: commands },
-        );
-
-        console.log('✅ Başarıyla tüm komutlar yüklendi!');
-    } catch (error) {
-        console.error('Komut yükleme hatası:', error);
-    }
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    console.log('✅ Tüm komutlar yüklendi.');
 })();
